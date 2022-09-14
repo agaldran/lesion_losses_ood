@@ -1,0 +1,20 @@
+# Ignore python local caching files
+__pycache__
+**.idea
+# Ignore notebook checkpoints
+**.ipynb_checkpoints
+**.ipynb
+# Vim files and python caches
+*~
+*.swp
+*.pyc
+*.zip
+*.npz
+*.pth
+# ignore train data, leave test data alone
+data_endotect/train
+data_endotect/train_f*.csv
+data_endotect/val_f*.csv
+
+
+
