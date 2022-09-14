@@ -1,30 +1,8 @@
 import sys
 import segmentation_models_pytorch as smp
 import torch
-import torch.nn as nn
-import torch.nn.functional as F
 import timm
 
-def get_layer(model, name):
-    layer = model
-    for attr in name.split("."):
-        layer = getattr(layer, attr)
-    return layer
-
-def set_layer(model, name, layer):
-    try:
-        attrs, name = name.rsplit(".", 1)
-        model = get_layer(model, attrs)
-    except ValueError:
-        pass
-    setattr(model, name, layer)
-
-class StdConv2d(nn.Conv2d):
-    def forward(self, x):
-        w = self.weight
-        v, m = torch.var_mean(w, dim=[1, 2, 3], keepdim=True, unbiased=False)
-        w = (w - m) / torch.sqrt(v + 1e-10)
-        return F.conv2d(x, w, self.bias, self.stride, self.padding, self.dilation, self.groups)
 
 class SMP_W(torch.nn.Module):
     def __init__(self, decoder=smp.FPN, encoder_name='resnet34', encoder2_name=None, in_channels=3,
@@ -46,7 +24,7 @@ class SMP_W(torch.nn.Module):
         return x1, x2
 
 
-def get_arch(model_name, in_c=3, n_classes=1, pretrained=True, norm='bn', nr_groups=32):
+def get_arch(model_name, in_c=3, n_classes=1, pretrained=True):
 
     e_ws = 'imagenet' if pretrained else None
 
@@ -118,114 +96,6 @@ def get_arch(model_name, in_c=3, n_classes=1, pretrained=True, norm='bn', nr_gro
     mean, std = [0.485, 0.456, 0.406], [0.229, 0.224, 0.225]
 
 
-
-
-
-
-
-
-
-    # print('------- maybe should try with encoder only or decoder only if this does not work? -------')
-    if norm != 'bn':
-        # https://github.com/pytorch/vision/issues/2391#issuecomment-653900218
-        for name, module in model.m1.encoder.named_modules():
-            if isinstance(module, nn.BatchNorm2d):
-                # Get current bn layer
-                bn = get_layer(model.m1.encoder, name)
-                # Create new in layer
-                if norm == 'in':
-                    normalization = 'Instance-Norm'
-                    new_norm = torch.nn.InstanceNorm2d(bn.num_features)
-                elif norm == 'ln':
-                    normalization = 'Layer-Norm'
-                    new_norm = nn.GroupNorm(1, bn.num_features)
-                elif norm == 'gn':
-                    normalization = 'Group-Norm ({} groups)'.format(nr_groups)
-                    new_norm = nn.GroupNorm(nr_groups, bn.num_features)
-                else:
-                    sys.exit('norm should be bn, in, ln, or gn, sorry')
-                # Assign in
-                # print("Swapping {} with {}".format(bn, inst))
-                set_layer(model.m1.encoder, name, new_norm)
-        for name, module in model.m2.encoder.named_modules():
-            if isinstance(module, nn.BatchNorm2d):
-                # Get current bn layer
-                bn = get_layer(model.m2.encoder, name)
-                # Create new in layer
-                if norm == 'in':
-                    normalization = 'Instance-Norm'
-                    new_norm = torch.nn.InstanceNorm2d(bn.num_features)
-                elif norm == 'ln':
-                    normalization = 'Layer-Norm'
-                    new_norm = nn.GroupNorm(1, bn.num_features)
-                elif norm == 'gn':
-                    normalization = 'Group-Norm ({} groups)'.format(nr_groups)
-                    new_norm = nn.GroupNorm(nr_groups, bn.num_features)
-                else:
-                    sys.exit('norm should be bn, in, ln, or gn, sorry')
-                # Assign in
-                # print("Swapping {} with {}".format(bn, inst))
-                set_layer(model.m2.encoder, name, new_norm)
-        print('* ENCODER: Switched from Batch-Norm to {}'.format(normalization))
-
-    if norm != 'bn':
-        # https://github.com/pytorch/vision/issues/2391#issuecomment-653900218
-        for name, module in model.m1.decoder.named_modules():
-            if isinstance(module, nn.BatchNorm2d):
-                # Get current bn layer
-                bn = get_layer(model.m1.decoder, name)
-                # Create new in layer
-                if norm == 'in':
-                    normalization = 'Instance-Norm'
-                    new_norm = torch.nn.InstanceNorm2d(bn.num_features)
-                elif norm == 'ln':
-                    normalization = 'Layer-Norm'
-                    new_norm = nn.GroupNorm(1, bn.num_features)
-                elif norm == 'gn':
-                    normalization = 'Group-Norm ({} groups)'.format(nr_groups)
-                    new_norm = nn.GroupNorm(nr_groups, bn.num_features)
-                else:
-                    sys.exit('norm should be bn, in, ln, or gn, sorry')
-                # Assign in
-                # print("Swapping {} with {}".format(bn, inst))
-                set_layer(model.m1.decoder, name, new_norm)
-        for name, module in model.m2.decoder.named_modules():
-            if isinstance(module, nn.BatchNorm2d):
-                # Get current bn layer
-                bn = get_layer(model.m2.decoder, name)
-                # Create new in layer
-                if norm == 'in':
-                    normalization = 'Instance-Norm'
-                    new_norm = torch.nn.InstanceNorm2d(bn.num_features)
-                elif norm == 'ln':
-                    normalization = 'Layer-Norm'
-                    new_norm = nn.GroupNorm(1, bn.num_features)
-                elif norm == 'gn':
-                    normalization = 'Group-Norm ({} groups)'.format(nr_groups)
-                    new_norm = nn.GroupNorm(nr_groups, bn.num_features)
-                else:
-                    sys.exit('norm should be bn, in, ln, or gn, sorry')
-                # Assign in
-                # print("Swapping {} with {}".format(bn, inst))
-                set_layer(model.m2.decoder, name, new_norm)
-        print('* DECODER: Switched from Batch-Norm to {}'.format(normalization))
-
-    # # Replace conv2d by std_conv2d
-    # for name, module in model.named_modules():
-    #     if isinstance(module, nn.Conv2d):
-    #         # Get current bn layer
-    #         conv = get_layer(model, name)
-    #         # Create new in layer
-    #         b = False if conv.bias is None else True
-    #         new_conv = StdConv2d(conv.in_channels, conv.out_channels, conv.kernel_size,
-    #                              conv.stride, conv.padding, conv.dilation, conv.groups,
-    #                              bias=b, padding_mode=conv.padding_mode)
-    #
-    #         with torch.no_grad():
-    #             new_conv.weight.copy_(conv.weight)
-    #             if b: new_conv.bias.copy_(conv.bias)
-    #         set_layer(model, name, new_conv)
-    # print(model.m1.encoder.conv1)
     return model, mean, std
 
 
