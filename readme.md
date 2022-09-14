@@ -72,5 +72,7 @@ Those would end up training the five folds with all the loss combinations we ana
 Once a model has been trained (in a multi-fold manner), you can analyze results using `jupyter notebook`. 
 This is because I did not have time to put it all into a `python` file, but hey, you are getting this for free so...
 
-For example if you have already called `sh train_resnet18_endo.sh` and waited a few hours for the five-fold training to finish, you could now use `test_polyps.ipynb` to check performance. 
+For example if you have already called `sh train_resnet18_endo.sh` and waited a bit for the five-fold training to finish[^1], you could now use `test_polyps.ipynb` to check performance. 
 There you will be able to generate segmentations and compute Dice scores with aggregated statistics, for in and out-of-distribution data.
+
+[^1]: In my machine a model trains in 3+1/2 minutes, and this trains 25 models
