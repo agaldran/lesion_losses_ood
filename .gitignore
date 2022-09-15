@@ -16,5 +16,7 @@ data_endotect/train
 data_endotect/train_f*.csv
 data_endotect/val_f*.csv
 
+# ignore experiments
+experiments/
 
 
