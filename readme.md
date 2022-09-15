@@ -19,7 +19,7 @@ I forgot, we wanted to know if BCE, Dice, or some flavors of combinations of the
 You can also watch a short video of me presenting this work at the DFUC 2022 - MICCAI workshop, it's probably the quickest way to get an idea of what this is about. 
 Just click in the image below:
 
-<a href="https://www.youtube.com/">
+<a href="https://www.youtube.com/watch?v=yJObyL2wT2o">
 <p align="center">
 <img href="InstantDL" src="figures/DFU_MICCAI.png" width="500" alt="Link to presentation" align="center">
 </p>
