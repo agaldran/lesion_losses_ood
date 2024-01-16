@@ -244,7 +244,8 @@ if __name__ == '__main__':
 
     else:
         sys.exit('please choose between adam or sgd optimizers')
-    scheduler = CosineAnnealingLR(optimizer, T_max=cycle_lens[0] * len(train_loader), eta_min=min_lr)
+    # scheduler = torch.optim.lr_scheduler.CosineAnnealingWarmRestarts(optimizer, T_0=cycle_lens[0] * len(train_loader), eta_min=0)
+    scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=cycle_lens[0] * len(train_loader), eta_min=0)
 
     setattr(optimizer, 'max_lr', max_lr)  # store it inside the optimizer for accessing to it later
     setattr(scheduler, 'cycle_lens', cycle_lens)
